@@ -1,0 +1,15 @@
+{
+  "name": "snowball-stemmers-js",
+  "version": "3.1.1",
+  "description": "Snowball stemmers compiled to JavaScript — 38 algorithms, zero dependencies, auto-rebuilt on snowball releases",
+  "main": "index.js",
+  "files": ["lib", "index.js"],
+  "scripts": {
+    "test": "node scripts/smoke.mjs"
+  },
+  "keywords": ["snowball", "stemmer", "stemming", "search", "full-text"],
+  "license": "BSD-3-Clause",
+  "engines": {
+    "node": ">=14"
+  }
+}

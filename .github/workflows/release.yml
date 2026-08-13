@@ -1,0 +1,64 @@
+name: Release
+
+# Triggered by a v* tag (pushed by the Build workflow when snowball releases,
+# or manually). Verifies the committed lib/ matches a fresh build from the
+# pinned SNOWBALL_REF, runs the smoke test, publishes to npm with provenance,
+# and creates a GitHub release.
+#
+# npm publishing needs a token with publish permission as the NPM_TOKEN repo
+# secret (https://www.npmjs.com/settings/<user>/tokens). `--provenance`
+# requires the `id-token: write` permission and a public repository.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Regenerate from pinned SNOWBALL_REF and assert parity
+        run: |
+          cp -r lib /tmp/lib-before
+          bash scripts/build.sh
+          git diff --exit-code -- lib SNOWBALL_REF || {
+            echo "committed lib/ does not match a fresh build from $(cat SNOWBALL_REF)" >&2
+            exit 1
+          }
+          rm -rf lib && cp -r /tmp/lib-before lib
+
+      - name: Smoke test
+        run: node scripts/smoke.mjs
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Smoke test
+        run: node scripts/smoke.mjs
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true

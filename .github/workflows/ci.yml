@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Smoke test
+        run: node scripts/smoke.mjs
+
+      - name: Parity check (committed lib/ matches a fresh build)
+        run: |
+          cp -r lib /tmp/lib-before
+          bash scripts/build.sh
+          git diff --exit-code -- lib SNOWBALL_REF
+          rm -rf lib && cp -r /tmp/lib-before lib

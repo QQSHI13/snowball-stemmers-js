@@ -1,0 +1,66 @@
+name: Build
+
+# Rebuild the stemmers whenever snowball publishes a new release (checked
+# daily; the latest tag is compared to SNOWBALL_REF). Also triggerable
+# manually. When a new snowball tag is found: regenerate lib/, bump the
+# package version to match, commit, and push a v* tag — which triggers the
+# Release workflow.
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+      version: ${{ steps.check.outputs.version }}
+      ref: ${{ steps.check.outputs.ref }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check for a new snowball release
+        id: check
+        run: |
+          latest=$(git ls-remote --tags https://github.com/snowballstem/snowball.git \
+            | grep -oE 'refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sed 's|refs/tags/||' | sort -V | tail -1)
+          current=$(cat SNOWBALL_REF)
+          echo "latest snowball tag: ${latest}  (current: ${current})"
+          if [ -n "${latest}" ] && [ "${latest}" != "${current}" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "version=${latest#v}" >> "$GITHUB_OUTPUT"
+            echo "ref=${latest}" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  rebuild:
+    needs: check
+    if: needs.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build stemmers from snowball ${{ needs.check.outputs.ref }}
+        run: bash scripts/build.sh ${{ needs.check.outputs.ref }}
+
+      - name: Smoke test
+        run: node scripts/smoke.mjs
+
+      - name: Bump version, commit and tag
+        run: |
+          node -e "const p=require('./package.json'); p.version='${{ needs.check.outputs.version }}'; require('fs').writeFileSync('package.json', JSON.stringify(p,null,2)+'\n')"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "build: stemmers from snowball ${{ needs.check.outputs.ref }}"
+          git tag "v${{ needs.check.outputs.version }}"
+          git push origin main --tags
