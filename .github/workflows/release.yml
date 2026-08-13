@@ -58,16 +58,19 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Trusted publishing: with `id-token: write` above and an npm account
-      # configured for OIDC, npm exchanges the GitHub OIDC token directly —
-      # no token secret needed. One-time setup on the npm account:
+      # Trusted publishing: with `id-token: write` and npm CLI >= 11.5.1 +
+      # Node >= 22.14, `npm publish --provenance` auto-detects the OIDC
+      # environment and authenticates with a short-lived token — no secret
+      # needed. One-time setup on npmjs.com (web UI):
       #
-      #   npm token create --auth-type=oidc \
-      #     --token-type=granular --publish --access public
+      #   npmjs.com -> Access Tokens -> Trusted Publishers -> Add
+      #     Provider : GitHub Actions
+      #     Organization or user : QQSHI13
+      #     Repository           : snowball-stemmers-js
+      #     Workflow filename    : release.yml
+      #     Allowed actions      : npm publish
       #
-      # (runs on the publisher's machine, authenticated to npm; binds the
-      # GitHub OIDC issuer to the package). If the account is not OIDC-
-      # configured, npm falls back to the NPM_TOKEN secret above.
+      # NPM_TOKEN remains as a fallback for accounts without OIDC.
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
