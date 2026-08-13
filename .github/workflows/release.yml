@@ -52,6 +52,9 @@ jobs:
           # requires npm to detect the GitHub OIDC environment, and a blank
           # auth token in .npmrc prevents that fallback.
 
+      - name: Use npm with OIDC support (>= 11.5.1)
+        run: npm install -g npm@latest
+
       - name: Smoke test
         run: node scripts/smoke.mjs
 
