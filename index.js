@@ -19,7 +19,7 @@ const path = require("path")
 
 /* Derived from lib/ so the list stays in sync with the snowball build. */
 const ALGORITHMS = fs.readdirSync(path.join(__dirname, "lib"))
-  .filter(f => f.endsWith("-stemmer.js"))
+  .filter(f => f.endsWith("-stemmer.js") && f !== "base-stemmer.js")
   .map(f => f.slice(0, -"-stemmer.js".length))
   .sort()
 
