@@ -25,14 +25,12 @@ make -C "${TMP}/snowball" snowball >/dev/null
 mkdir -p lib
 cp "${TMP}/snowball/javascript/base-stemmer.js" lib/
 
-for lang in arabic armenian basque catalan czech danish dutch dutch_porter \
-  earlymodernenglish english esperanto estonian finnish french german greek \
-  hindi hungarian indonesian irish italian lithuanian lovins nepali norwegian \
-  persian polish porter portuguese romanian russian serbian sesotho spanish \
-  swedish tamil turkish yiddish
-do
+# Derive the algorithm list from the checked-out tree — the set grows with
+# snowball releases (e.g. earlymodernenglish appeared after 3.1.1).
+for sbl in "${TMP}"/snowball/algorithms/*.sbl; do
+  lang=$(basename "${sbl}" .sbl)
   "${TMP}/snowball/snowball" \
-    "${TMP}/snowball/algorithms/${lang}.sbl" \
+    "${sbl}" \
     -js -o "lib/${lang}-stemmer.js"
 done
 

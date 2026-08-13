@@ -14,15 +14,14 @@
  */
 "use strict"
 
-const ALGORITHMS = [
-  "arabic", "armenian", "basque", "catalan", "czech", "danish",
-  "dutch", "dutch_porter", "earlymodernenglish", "english", "esperanto",
-  "estonian", "finnish", "french", "german", "greek", "hindi",
-  "hungarian", "indonesian", "irish", "italian", "lithuanian", "lovins",
-  "nepali", "norwegian", "persian", "polish", "porter", "portuguese",
-  "romanian", "russian", "serbian", "sesotho", "spanish", "swedish",
-  "tamil", "turkish", "yiddish",
-]
+const fs = require("fs")
+const path = require("path")
+
+/* Derived from lib/ so the list stays in sync with the snowball build. */
+const ALGORITHMS = fs.readdirSync(path.join(__dirname, "lib"))
+  .filter(f => f.endsWith("-stemmer.js"))
+  .map(f => f.slice(0, -"-stemmer.js".length))
+  .sort()
 
 /* ISO-639-1 / lunr-languages style codes -> snowball algorithm names */
 const CODES = {
