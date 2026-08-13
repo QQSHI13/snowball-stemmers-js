@@ -48,15 +48,15 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 22
-          registry-url: https://registry.npmjs.org
+          # No registry-url / NODE_AUTH_TOKEN: trusted publishing (OIDC)
+          # requires npm to detect the GitHub OIDC environment, and a blank
+          # auth token in .npmrc prevents that fallback.
 
       - name: Smoke test
         run: node scripts/smoke.mjs
 
       - name: Publish to npm (trusted publishing / OIDC)
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # Trusted publishing: with `id-token: write` and npm CLI >= 11.5.1 +
       # Node >= 22.14, `npm publish --provenance` auto-detects the OIDC
