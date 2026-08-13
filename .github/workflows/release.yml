@@ -53,10 +53,21 @@ jobs:
       - name: Smoke test
         run: node scripts/smoke.mjs
 
-      - name: Publish to npm
+      - name: Publish to npm (trusted publishing / OIDC)
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Trusted publishing: with `id-token: write` above and an npm account
+      # configured for OIDC, npm exchanges the GitHub OIDC token directly —
+      # no token secret needed. One-time setup on the npm account:
+      #
+      #   npm token create --auth-type=oidc \
+      #     --token-type=granular --publish --access public
+      #
+      # (runs on the publisher's machine, authenticated to npm; binds the
+      # GitHub OIDC issuer to the package). If the account is not OIDC-
+      # configured, npm falls back to the NPM_TOKEN secret above.
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
