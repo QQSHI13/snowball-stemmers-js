@@ -20,5 +20,9 @@
   "license": "BSD-3-Clause",
   "engines": {
     "node": ">=14"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/QQSHI13/snowball-stemmers-js.git"
   }
 }
